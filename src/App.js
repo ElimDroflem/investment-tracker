@@ -1,96 +1,74 @@
-import logo from './assets/investment-calculator-logo.png';
+import React, { useState } from "react";
+import Header from "./Components/Header";
+import InvestmentForm from "./Components/InvestmentForm";
+import InvestmentTable from "./Components/InvestmentTable";
 
 function App() {
+  // State Declarations
+  // These states hold the values of the form fields and the calculated yearly data.
+  const [currentSavings, setCurrentSavings] = useState(0);
+  const [yearlySavings, setYearlySavings] = useState(0);
+  const [interest, setInterest] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [yearlyData, setYearlyData] = useState([]);
+
+  // Handler Function
+  // This function is triggered when the form is submitted.
+  // It calculates the yearly data based on the user input and updates the yearlyData state.
   const calculateHandler = (userInput) => {
-    // Should be triggered when form is submitted
-    // You might not directly want to bind it to the submit event on the form though...
+    const yearlyData = [];
+    let currentSavings = +userInput["current-savings"];
+    const yearlyContribution = +userInput["yearly-contribution"];
+    const expectedReturn = +userInput["expected-return"] / 100;
+    const duration = +userInput["duration"];
 
-    const yearlyData = []; // per-year results
+    let totalInterestGained = 0;
+    let totalInvestedCapital = currentSavings;
 
-    let currentSavings = +userInput['current-savings']; // feel free to change the shape of this input object!
-    const yearlyContribution = +userInput['yearly-contribution']; // as mentioned: feel free to change the shape...
-    const expectedReturn = +userInput['expected-return'] / 100;
-    const duration = +userInput['duration'];
-
-    // The below code calculates yearly results (total savings, interest etc)
     for (let i = 0; i < duration; i++) {
       const yearlyInterest = currentSavings * expectedReturn;
+      totalInterestGained += yearlyInterest;
+      totalInvestedCapital += yearlyContribution;
       currentSavings += yearlyInterest + yearlyContribution;
+
       yearlyData.push({
-        // feel free to change the shape of the data pushed to the array!
         year: i + 1,
         yearlyInterest: yearlyInterest,
         savingsEndOfYear: currentSavings,
         yearlyContribution: yearlyContribution,
+        totalInterestGained: totalInterestGained,
+        totalInvestedCapital: totalInvestedCapital,
       });
     }
 
-    // do something with yearlyData ...
+    setYearlyData(yearlyData);
   };
 
+  // Component Render
+  // The component renders the Header, InvestmentForm, and either the InvestmentTable or a message,
+  // depending on whether there is any yearly data available.
   return (
     <div>
-      <header className="header">
-        <img src={logo} alt="logo" />
-        <h1>Investment Calculator</h1>
-      </header>
-
-      <form className="form">
-        <div className="input-group">
-          <p>
-            <label htmlFor="current-savings">Current Savings ($)</label>
-            <input type="number" id="current-savings" />
-          </p>
-          <p>
-            <label htmlFor="yearly-contribution">Yearly Savings ($)</label>
-            <input type="number" id="yearly-contribution" />
-          </p>
-        </div>
-        <div className="input-group">
-          <p>
-            <label htmlFor="expected-return">
-              Expected Interest (%, per year)
-            </label>
-            <input type="number" id="expected-return" />
-          </p>
-          <p>
-            <label htmlFor="duration">Investment Duration (years)</label>
-            <input type="number" id="duration" />
-          </p>
-        </div>
-        <p className="actions">
-          <button type="reset" className="buttonAlt">
-            Reset
-          </button>
-          <button type="submit" className="button">
-            Calculate
-          </button>
+      <Header />
+      <InvestmentForm
+        calculateHandler={calculateHandler}
+        currentSavings={currentSavings}
+        setCurrentSavings={setCurrentSavings}
+        yearlySavings={yearlySavings}
+        setYearlySavings={setYearlySavings}
+        interest={interest}
+        setInterest={setInterest}
+        duration={duration}
+        setDuration={setDuration}
+      />
+      {yearlyData.length > 0 ? (
+        <InvestmentTable yearlyData={yearlyData} />
+      ) : (
+        <p className="noDataMessage">
+          No data available. Please enter the investment details and click
+          Calculate.
         </p>
-      </form>
-
-      {/* Todo: Show below table conditionally (only once result data is available) */}
-      {/* Show fallback text if no data is available */}
-
-      <table className="result">
-        <thead>
-          <tr>
-            <th>Year</th>
-            <th>Total Savings</th>
-            <th>Interest (Year)</th>
-            <th>Total Interest</th>
-            <th>Invested Capital</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>YEAR NUMBER</td>
-            <td>TOTAL SAVINGS END OF YEAR</td>
-            <td>INTEREST GAINED IN YEAR</td>
-            <td>TOTAL INTEREST GAINED</td>
-            <td>TOTAL INVESTED CAPITAL</td>
-          </tr>
-        </tbody>
-      </table>
+      )}
     </div>
   );
 }
